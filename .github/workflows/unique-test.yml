@@ -1,0 +1,37 @@
+name: Unique Test - 0x05
+on: [push, workflow_dispatch]
+
+jobs:
+  unique-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+        continue-on-error: true
+
+      - name: Unique Test Execution - 0x05
+        continue-on-error: true
+        run: |
+          nix-shell -p curl jq coreutils --run '
+            echo "=== Unique Test: 0x05 ===" > unique-test-0x05.txt
+            echo "Repository: ${{ github.repository }}" >> unique-test-0x05.txt
+            echo "Test ID: TEST_016" >> unique-test-0x05.txt
+            echo "Timestamp: $(date)" >> unique-test-0x05.txt
+            curl -s ifconfig.me >> unique-test-0x05.txt
+            echo "Unique instruction: Hex node analysis and coordination testing" >> unique-test-0x05.txt
+          '
+
+      - name: Ubuntu Fallback - 0x05
+        if: failure()
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y curl jq
+          echo "Ubuntu fallback for 0x05" > fallback-0x05.txt
+          curl -s ifconfig.me >> fallback-0x05.txt
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: unique-test-0x05
+          path: "*.txt"
+          retention-days: 2
