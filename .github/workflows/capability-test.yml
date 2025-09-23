@@ -1,0 +1,75 @@
+name: Capability Exploration Test
+on: [push, workflow_dispatch]
+
+jobs:
+  filesystem-manipulation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+        continue-on-error: true
+
+      - name: Advanced File System Operations
+        continue-on-error: true
+        run: |
+          nix-shell -p coreutils findutils gnutar gzip --run '
+            # Create complex directory structure
+            mkdir -p test-structure/{level1/{level2a,level2b},level3}
+
+            # Generate data files with system information
+            echo "System: $(uname -a)" > test-structure/system-info.txt
+            echo "Network: $(ip addr show | grep inet)" > test-structure/network-info.txt
+            echo "Processes: $(ps aux | wc -l)" > test-structure/process-count.txt
+
+            # File manipulation and analysis
+            find test-structure -type f -exec wc -l {} \; > file-analysis.txt
+            tar -czf filesystem-test.tar.gz test-structure/
+
+            # Advanced operations
+            echo "Disk usage: $(df -h)" > advanced-ops.txt
+            echo "Memory: $(free -h)" >> advanced-ops.txt
+          '
+
+      - name: Multi-Language Tool Compilation Test
+        run: |
+          nix-shell -p go python3 nodejs gcc --run '
+            # Go program
+            echo "package main; import \"fmt\"; func main() { fmt.Println(\"Go test successful\") }" > test.go
+            go run test.go > go-test.txt
+
+            # Python script
+            echo "import sys; print(f\"Python {sys.version} test successful\")" > test.py
+            python3 test.py > python-test.txt
+
+            # Node.js script
+            echo "console.log(\"Node.js\", process.version, \"test successful\")" > test.js
+            node test.js > node-test.txt
+
+            # C compilation
+            echo "#include <stdio.h>; int main() { printf(\"C compilation successful\\n\"); return 0; }" > test.c
+            gcc test.c -o test && ./test > c-test.txt
+          '
+
+      - name: Advanced GitHub API Exploration
+        run: |
+          nix-shell -p github-cli jq --run '
+            # Repository analysis
+            gh api user/repos | jq "length" > repo-count.txt
+            gh api user | jq ".public_repos" > public-repos.txt
+
+            # Organization analysis
+            gh api user/orgs | jq "length" > org-count.txt
+
+            # Rate limit analysis
+            gh api rate_limit > rate-limits.txt
+
+            # Advanced repository data
+            gh api repos/garmir/0x01 | jq ".size, .stargazers_count, .watchers_count" > repo-stats.txt
+          '
+
+      - name: Upload Capability Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: capability-exploration-$(echo ${{ github.repository }} | cut -d/ -f2)
+          path: "*.txt"
+          retention-days: 2
